@@ -1,20 +1,55 @@
-const EmailService = require('../services/emailService');
+const nodemailer = require('nodemailer');
+const Email = require('../models/emailModel');
 
-exports.createEmail = async (req, res) => {
+// Configuração do transportador de e-mail usando o Gmail
+const transporter = nodemailer.createTransport({
+  service: 'gmail', // Corrigido de 'Gmail' para 'gmail'
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Enviar e-mail
+exports.sendEmail = async (req, res) => {
+  const { to, subject, text } = req.body;
+
+  // Verificar se os campos obrigatórios estão presentes
+  if (!to || !subject || !text) {
+    return res.status(400).json({ message: 'Campos "to", "subject" e "text" são obrigatórios.' });
+  }
+
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to,
+    subject,
+    text
+  };
+
   try {
-    const tempEmail = await EmailService.createTempEmail();
-    res.status(200).json({ email: tempEmail });
+    await transporter.sendMail(mailOptions);
+    res.status(200).json({ message: 'E-mail enviado com sucesso!' });
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao criar e-mail temporário' });
+    console.error('Erro ao enviar e-mail:', error); // Adiciona um log para depuração
+    res.status(500).json({ message: 'Erro ao enviar e-mail', error: error.message });
   }
 };
 
-exports.confirmEmail = async (req, res) => {
+// Adicionar e-mail ao banco de dados
+exports.saveEmail = async (req, res) => {
+  const { to, subject, text } = req.body;
+
+  // Verificar se os campos obrigatórios estão presentes
+  if (!to || !subject || !text) {
+    return res.status(400).json({ message: 'Campos "to", "subject" e "text" são obrigatórios.' });
+  }
+
   try {
-    const { email } = req.body;
-    const confirmation = await EmailService.confirmEmail(email);
-    res.status(200).json({ message: 'E-mail confirmado', confirmation });
+    const email = new Email({ to, subject, text });
+    await email.save();
+    res.status(201).json({ message: 'E-mail salvo com sucesso!', email });
   } catch (error) {
-    res.status(500).json({ error: 'Erro ao confirmar e-mail' });
+    console.error('Erro ao salvar e-mail:', error); // Adiciona um log para depuração
+    res.status(500).json({ message: 'Erro ao salvar e-mail', error: error.message });
   }
 };

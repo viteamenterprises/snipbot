@@ -1,6 +1,6 @@
 const axios = require('axios');
 const Email = require('../models/emailModel'); // Usado se você estiver armazenando emails no MongoDB
-const seleniumHelper = require('../utils/seleniumHelper');
+const seleniumHelper = require('../utils/seleniumHelper.js');
 
 exports.createTempEmail = async () => {
   try {

@@ -1,0 +1,14 @@
+const express = require('express');
+const router = express.Router();
+const { createVideo, generateClips, getChannelUploads } = require('../controllers/videoController');
+
+// Rota para criar um novo vídeo
+router.post('/', createVideo);
+
+// Rota para gerar clipes do vídeo
+router.post('/clips', generateClips);
+
+// Rota para obter vídeos de um canal do YouTube
+router.get('/channel/:channelId', getChannelUploads);
+
+module.exports = router;
